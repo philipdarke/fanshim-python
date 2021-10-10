@@ -14,7 +14,7 @@ parser.add_argument('--low-temp', type=float, default=30.0, help='Temperature at
 parser.add_argument('--high-temp', type=float, default=85.0, help='Temperature for which LED is red')
 parser.add_argument('--delay', type=float, default=5.0, help='Delay, in seconds, between temperature readings.')
 parser.add_argument('--verbose', action='store_true', default=False, help='Output temp and fan status messages.')
-parser.add_argument('--brightness', type=float, default=0.05, help='LED brightness (0-1).')
+parser.add_argument('--brightness', type=float, default=0.1, help='LED brightness (0-1).')
 args = parser.parse_args()
 
 def update_led(temp):

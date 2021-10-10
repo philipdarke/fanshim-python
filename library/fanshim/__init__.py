@@ -59,7 +59,7 @@ class APA102():
 
 
 class FanShim():
-    def __init__(self, led_clock=14, led_data=15, fan_pin=18, led_brightness=0.05):
+    def __init__(self, led_clock=14, led_data=15, fan_pin=18, led_brightness=0.1):
         """FAN Shim.
 
         Based heavily on https://github.com/pimoroni/fanshim-python.
