@@ -119,17 +119,14 @@ if ! [ "$2" == "" ]; then
 fi
 
 cat << EOF
-Setting up with:
-Off Threshold:    $OFF_THRESHOLD C
-On Threshold:     $ON_THRESHOLD C
-Low Temp:         $LOW_TEMP C
-High Temp:        $HIGH_TEMP C
+Setting up pimoroni-fanshim.service:
+
+Off threshold:    $OFF_THRESHOLD C
+On threshold:     $ON_THRESHOLD C
+Low temp:         $LOW_TEMP C
+High temp:        $HIGH_TEMP C
 Delay:            $DELAY seconds
-Preempt:          $PREEMPT
-Disable LED:      $NOLED
-Disable Button:   $NOBUTTON
 Brightness:       $BRIGHTNESS
-Extended Colours: $EXTCOLOURS
 
 To change these options, run $USAGE or edit $SERVICE_PATH.
 
@@ -150,7 +147,7 @@ Restart=on-failure
 WantedBy=multi-user.target
 EOF
 
-printf "Checking for lgpio (for Pi 4 Ubuntu 20.04+ support)\n"
+printf "Checking for lgpio (for Pi 4 Ubuntu 20.04+ support)...\n"
 $PYTHON - <<EOF
 import lgpio
 EOF
@@ -162,7 +159,7 @@ else
 	printf "lgpio is installed\n"
 fi
 
-printf "Checking for fanshim\n"
+printf "Checking for fanshim...\n"
 $PYTHON - > /dev/null 2>&1 <<EOF
 import fanshim
 EOF
@@ -174,7 +171,7 @@ else
 	printf "fanshim is installed\n"
 fi
 
-printf "Checking for psutil >= $PSUTIL_MIN_VERSION\n"
+printf "Checking for psutil >= $PSUTIL_MIN_VERSION...\n"
 $PYTHON - > /dev/null 2>&1 <<EOF
 import sys
 import psutil
