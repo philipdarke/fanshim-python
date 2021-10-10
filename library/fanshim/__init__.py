@@ -85,13 +85,13 @@ class FanShim():
     def set_fan(self, state):
         """Set fan state."""
         gpio.gpio_write(self._sbc, self._fan_pin, state)
-        return state
+        return int(state)
 
     def toggle_fan(self):
         """Toggle fan state."""
         fan_state = self.get_fan()
         gpio.gpio_write(self._sbc, self._fan_pin, not fan_state)
-        return not fan_state
+        return int(not fan_state)
 
     def set_light(self, r, g, b, brightness=None):
         """Set LED.
