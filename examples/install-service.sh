@@ -3,14 +3,11 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ON_THRESHOLD=65
 OFF_THRESHOLD=55
-HYSTERESIS=5
-DELAY=2
-PREEMPT="no"
+LOW_TEMP=30
+HIGH_TEMP=85
+DELAY=5
 POSITIONAL_ARGS=()
-NOLED="no"
-NOBUTTON="no"
-BRIGHTNESS=255
-EXTCOLOURS="no"
+BRIGHTNESS=0.05
 PYTHON="python3"
 PIP="pip3"
 PSUTIL_MIN_VERSION="5.6.7"
@@ -20,7 +17,7 @@ OFF_THRESHOLD_SET=false
 
 SERVICE_PATH=/etc/systemd/system/pimoroni-fanshim.service
 
-USAGE="sudo ./install-service.sh --off-threshold <n> --on-threshold <n> --delay <n> --brightness <n> --low-temp <n> --high-temp <n> --venv <python_virtual_environment> (--preempt) (--noled) (--nobutton) (--extended-colours)"
+USAGE="sudo ./install-service.sh --off-threshold <n> --on-threshold <n> --low-temp <n> --high-temp <n> --delay <n> --brightness <n> --venv <python_virtual_environment>"
 
 # Convert Python path to absolute for systemd
 PYTHON=`type -P $PYTHON`
@@ -28,33 +25,6 @@ PYTHON=`type -P $PYTHON`
 while [[ $# -gt 0 ]]; do
 	K="$1"
 	case $K in
-	-p|--preempt)
-		if [ "$2" == "yes" ] || [ "$2" == "no" ]; then
-			PREEMPT="$2"
-			shift
-		else
-			PREEMPT="yes"
-		fi
-		shift
-		;;
-	-l|--noled)
-		if [ "$2" == "yes" ] || [ "$2" == "no" ]; then
-			NOLED="$2"
-			shift
-		else
-			NOLED="yes"
-		fi
-		shift
-		;;
-	-b|--nobutton)
-		if [ "$2" == "yes" ] || [ "$2" == "no" ]; then
-			NOBUTTON="$2"
-			shift
-		else
-			NOBUTTON="yes"
-		fi
-		shift
-		;;
 	-o|--on-threshold)
 		ON_THRESHOLD="$2"
 		ON_THRESHOLD_SET=true
@@ -94,15 +64,6 @@ while [[ $# -gt 0 ]]; do
 		shift
 		shift
 		;;
-	-x|--extended-colours)
-		if [ "$2" == "yes" ] || [ "$2" == "no" ]; then
-			EXTCOLOURS="$2"
-			shift
-		else
-			EXTCOLOURS="yes"
-		fi
-		shift
-		;;
 	*)
 		if [[ $1 == -* ]]; then
 			printf "Unrecognised option: $1\n";
@@ -116,17 +77,17 @@ done
 
 if ! ( type -P "$PYTHON" > /dev/null ) ; then
 	if [ "$PYTHON" == "python3" ]; then
-		printf "Fan SHIM controller requires Python 3\n"
+		printf "fanshim controller requires Python 3\n"
 		printf "You should run: 'sudo apt install python3'\n"
 	else
 		printf "Cannot find virtual environment.\n"
-		printf "Set to base of virtual environment i.e. <venv>/bin/python3.\n"
+		printf "Set to base of virtual environment i.e. <venv>/bin/python3\n"
 	fi
 	exit 1
 fi
 
 if ! ( type -P "$PIP" > /dev/null ) ; then
-	printf "Fan SHIM controller requires Python 3 pip\n"
+	printf "fanshim controller requires Python 3 pip\n"
 	if [ "$PIP" == "pip3" ]; then
 		printf "You should run: 'sudo apt install python3-pip'\n"
 	else
@@ -138,22 +99,6 @@ fi
 set -- "${POSITIONAL_ARGS[@]}"
 
 EXTRA_ARGS=""
-
-if [ "$PREEMPT" == "yes" ]; then
-	EXTRA_ARGS+=' --preempt'
-fi
-
-if [ "$NOLED" == "yes" ]; then
-	EXTRA_ARGS+=' --noled'
-fi
-
-if [ "$NOBUTTON" == "yes" ]; then
-	EXTRA_ARGS+=' --nobutton'
-fi
-
-if [ "$EXTCOLOURS" == "yes" ]; then
-	EXTRA_ARGS+=' --extended-colours'
-fi
 
 if ! [ "$1" == "" ]; then
 	if [ $ON_THRESHOLD_SET ]; then
@@ -173,14 +118,6 @@ if ! [ "$2" == "" ]; then
 	(( OFF_THRESHOLD = ON_THRESHOLD - $2 ))
 fi
 
-if [ "$LOW_TEMP" == "" ]; then
-    LOW_TEMP=$OFF_THRESHOLD
-fi
-
-if [ "$HIGH_TEMP" == "" ]; then
-    HIGH_TEMP=$ON_THRESHOLD
-fi
-
 cat << EOF
 Setting up with:
 Off Threshold:    $OFF_THRESHOLD C
@@ -194,11 +131,7 @@ Disable Button:   $NOBUTTON
 Brightness:       $BRIGHTNESS
 Extended Colours: $EXTCOLOURS
 
-To change these options, run:
-$USAGE
-
-Or edit: $SERVICE_PATH
-
+To change these options, run $USAGE or edit $SERVICE_PATH.
 
 EOF
 
@@ -217,32 +150,28 @@ Restart=on-failure
 WantedBy=multi-user.target
 EOF
 
-printf "Checking for rpi.gpio >= 0.7.0 (for Pi 4 support)\n"
+printf "Checking for lgpio (for Pi 4 Ubuntu 20.04+ support)\n"
 $PYTHON - <<EOF
-import RPi.GPIO as GPIO
-from pkg_resources import parse_version
-import sys
-if parse_version(GPIO.VERSION) < parse_version('0.7.0'):
-    sys.exit(1)
+import lgpio
 EOF
 
 if [ $? -ne 0 ]; then
-	printf "Installing rpi.gpio\n"
-	$PIP install --upgrade "rpi.gpio>=0.7.0"
+	printf "Installing lgpio\n"
+	$PIP install lgpio
 else
-	printf "rpi.gpio >= 0.7.0 already installed\n"
+	printf "lgpio is installed\n"
 fi
 
-printf "Checking for Fan SHIM\n"
+printf "Checking for fanshim\n"
 $PYTHON - > /dev/null 2>&1 <<EOF
 import fanshim
 EOF
 
 if [ $? -ne 0 ]; then
-	printf "Installing Fan SHIM\n"
+	printf "Installing fanshim\n"
 	$PIP install fanshim
 else
-	printf "Fan SHIM already installed\n"
+	printf "fanshim is installed\n"
 fi
 
 printf "Checking for psutil >= $PSUTIL_MIN_VERSION\n"
