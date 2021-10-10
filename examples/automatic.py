@@ -68,4 +68,5 @@ try:
         # Wait for next check
         time.sleep(args.delay)
 except KeyboardInterrupt:
+    fanshim.set_light(0, 0, 0, 0)  # switch off temperature LED
     pass
