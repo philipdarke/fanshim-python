@@ -1,44 +1,52 @@
-# Fan Shim for Raspberry Pi
+# Pimoroni Fan Shim for Ubuntu 20.04+
 
-[![Build Status](https://travis-ci.com/pimoroni/fanshim-python.svg?branch=master)](https://travis-ci.com/pimoroni/fanshim-python)
-[![Coverage Status](https://coveralls.io/repos/github/pimoroni/fanshim-python/badge.svg?branch=master)](https://coveralls.io/github/pimoroni/fanshim-python?branch=master)
-[![PyPi Package](https://img.shields.io/pypi/v/fanshim.svg)](https://pypi.python.org/pypi/fanshim)
-[![Python Versions](https://img.shields.io/pypi/pyversions/fanshim.svg)](https://pypi.python.org/pypi/fanshim)
+**This repository updates the Pimoroni Fan Shim software for Raspberry Pi running Ubuntu 20.04+. Tested on a Raspberry Pi 4 8Gb running Ubuntu Server 20.04.**
 
-# Installing
+The Python package `RPi.GPIO` no longer functions on Ubuntu 21.04 (Hirsute Hippo) or newer due to changes to the kernel. The `LGPIO` package should be used in its place. See https://waldorf.waveform.org.uk/2021/the-pins-they-are-a-changin.html, https://ubuntu.com/tutorials/gpio-on-raspberry-pi and http://abyz.me.uk/lg/py_lgpio.html for more information.
 
-Stable library from PyPi:
+The `APA102` package is affected by the same issue. This repository includes a basic `APA102` class which can be used to control the LED on the Pimoroni Fan Shim.
 
-* Just run `sudo pip install fanshim`
+This work is heavily based on https://github.com/pimoroni/fanshim-python and https://github.com/pimoroni/apa102-python.
 
-Latest/development library from GitHub:
+:bangbang: Currently undergoing testing. Keep an eye on your CPU temperatures and use at your own risk.
 
-* `apt install git python3-pip`
-* `git clone https://github.com/pimoroni/fanshim-python`
-* `cd fanshim-python`
-* `sudo ./install.sh`
+## Installation
 
-# Reference
+1. `apt install git python3-pip`
+1. `git clone https://github.com/philipdarke/fanshim-python`
+1. `cd fanshim-python`
+1. `sudo ./install.sh`
 
-You should first set up an instance of the `FANShim` class, eg:
+A background service is also provided to switch the fan on when the CPU temperature exceeds a threshold (default 65C). The LED colour indicates the CPU temperature. See further details [here](examples/README.md). To install the background service:
+
+1. `cd examples`
+1. `sudo ./install-service.sh`
+
+## Stress testing
+
+`stress-ng` can be used to stress the CPU and test the background service is working correctly. The following code stresses the CPU for three minutes which should trigger the fan. The `--tz` argument reports the CPU temperature at the end of the run.
+
+```bash
+sudo apt install stress-ng
+stress-ng --cpu 0 --cpu-method fft --tz -t 180
+```
+
+## Reference
+
+First set up an instance of the `FanShim` class:
 
 ```python
 from fanshim import FanShim
 fanshim = FanShim()
 ```
 
-## Fan
+### Fan
 
-Turn the fan on with:
-
-```python
-fanshim.set_fan(True)
-```
-
-Turn it off with:
+Turn the fan on/off with:
 
 ```python
-fanshim.set_fan(False)
+fanshim.set_fan(True)  # fan on
+fanshim.set_fan(False)  # fan off
 ```
 
 You can also toggle the fan with:
@@ -50,91 +58,28 @@ fanshim.toggle_fan()
 You can check the status of the fan with:
 
 ```python
-fanshim.get_fan() # returns 1 for 'on', 0 for 'off'
+fanshim.get_fan()  # returns 1 for on, 0 for off
 ```
 
-## LED
+### LED
 
-Fan Shim includes one RGB APA-102 LED.
-
-Set it to any colour with:
+The Fan Shim includes one RGB APA-102 LED. Set it to any colour with:
 
 ```python
 fanshim.set_light(r, g, b)
+fanshim.set_light(r, g, b, brightness)  # optional to also set brightness
 ```
 
-Arguments r, g and b should be numbers between 0 and 255 that describe the colour you want.
-
-For example, full red:
+Arguments r, g and b should be numbers between 0 and 255 using the RGB colour system. For example, for red:
 
 ```
 fanshim.set_light(255, 0, 0)
 ```
 
-## Button
+### Button
 
-Fan Shim includes a button, you can bind actions to press, release and hold events.
+The Pimoroni Fan Shim includes a button that can be user bound, however **this is not current implemented**.
 
-Do something when the button is pressed:
+## Licence
 
-```python
-@fanshim.on_press()
-def button_pressed():
-    print("The button has been pressed!")
-```
-
-Or when it has been released:
-
-```python
-@fanshim.on_release()
-def button_released(was_held):
-    print("The button has been pressed!")
-```
-
-Or when it's been pressed long enough to trigger a hold:
-
-```python
-fanshim.set_hold_time(2.0)
-
-@fanshim.on_hold()
-def button_held():
-    print("The button was held for 2 seconds")
-```
-
-The function you bind to `on_release()` is passed a `was_held` parameter,
-this lets you know if the button was held down for longer than the configured
-hold time. If you want to bind an action to "press" and another to "hold" you
-should check this flag and perform your action in the `on_release()` handler:
-
-```python
-@fanshim.on_release()
-def button_released(was_held):
-    if was_held:
-        print("Long press!")
-    else:
-        print("Short press!")
-```
-
-To configure the amount of time the button should be held (in seconds), use:
-
-```python
-fanshim.set_hold_time(number_of_seconds)
-```
-
-If you need to stop Fan Shim from polling the button, use:
-
-```python
-fanshim.stop_polling()
-```
-
-You can start it again with:
-
-```python
-fanshim.start_polling()
-```
-
-# Alternate Software
-
-* Fan SHIM in C, using WiringPi - https://github.com/flobernd/raspi-fanshim
-* Fan SHIM in C++, using libgpiod - https://github.com/daviehh/fanshim-cpp
-
+See the [licence](LICENSE) for the https://github.com/pimoroni/fanshim-python/ and https://github.com/pimoroni/apa102-python repositories.
