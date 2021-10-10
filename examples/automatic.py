@@ -21,7 +21,7 @@ def update_led(temp):
     """Update LED to indicate temperature."""
     if temp < args.off_threshold:
         temp -= args.low_temp
-        temp /= float(args.off_threshold - rgs.low_temp)
+        temp /= float(args.off_threshold - args.low_temp)
         temp  = max(0, temp)
         hue   = (120.0 / 360.0) + ((1.0 - temp) * 120.0 / 360.0)
     elif temp > args.on_threshold:
