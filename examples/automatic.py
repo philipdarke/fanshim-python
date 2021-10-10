@@ -10,7 +10,7 @@ import sys
 parser = argparse.ArgumentParser()
 parser.add_argument('--off-threshold', type=float, default=55.0, help='Temperature threshold in degrees C to enable fan.')
 parser.add_argument('--on-threshold', type=float, default=65.0, help='Temperature threshold in degrees C to disable fan.')
-parser.add_argument('--low-temp', type=float, default=30.0, help='Temperature at which the LED is green')
+parser.add_argument('--low-temp', type=float, default=30.0, help='Temperature at which the LED is blue')
 parser.add_argument('--high-temp', type=float, default=85.0, help='Temperature for which LED is red')
 parser.add_argument('--delay', type=float, default=5.0, help='Delay, in seconds, between temperature readings.')
 parser.add_argument('--verbose', action='store_true', default=False, help='Output temp and fan status messages.')
@@ -68,5 +68,7 @@ try:
         # Wait for next check
         time.sleep(args.delay)
 except KeyboardInterrupt:
-    fanshim.set_light(0, 0, 0, 0)  # switch off temperature LED
+    # Reset: run fan and switch off LED
+    fanshim.set_fan(1)
+    fanshim.set_light(0, 0, 0, 0)
     pass
