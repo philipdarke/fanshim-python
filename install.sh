@@ -80,7 +80,7 @@ EOF
 
 if [ $? -ne 0 ]; then
 	printf "Installing lgpio\n"
-	pip3 install lgpio"
+	pip3 install lgpio
 else
 	printf "lgpio is installed\n"
 fi
