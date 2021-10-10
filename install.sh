@@ -23,7 +23,7 @@ function apt_pkg_install {
 	PACKAGES_IN=("$@")
 	for ((i = 0; i < ${#PACKAGES_IN[@]}; i++)); do
 		PACKAGE="${PACKAGES_IN[$i]}"
-		printf "Checking for $PACKAGE\n"
+		printf "Checking for $PACKAGE...\n"
 		dpkg -L $PACKAGE > /dev/null 2>&1
 		if [ "$?" == "1" ]; then
 			PACKAGES+=("$PACKAGE")
@@ -73,7 +73,7 @@ cd library
 
 printf "Installing for Python 3...\n"
 
-printf "Checking for lgpio (for Pi 4 Ubuntu 20.04+ support)\n"
+printf "Checking for lgpio (for Pi 4 Ubuntu 20.04+ support)...\n"
 python3 - <<EOF
 import lgpio
 EOF
